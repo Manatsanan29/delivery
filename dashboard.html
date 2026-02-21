@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>แดชบอร์ด KPI</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/dashboard.css" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+
+<body class="bg-soft">
+  <!-- Top bar -->
+  <header class="topbar shadow-sm">
+    <div class="container-fluid d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-2">
+        <div class="brand-icon">📦</div>
+        <div class="brand-title">Employee Performance Dashboard</div>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <span class="badge bg-light text-dark">Admin</span>
+        <div class="avatar">👤</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container-fluid py-3">
+    <!-- KPI cards -->
+    <div class="row g-3">
+      <div class="col-12 col-md-3">
+        <div class="card kpi-card">
+          <div class="kpi-label">ส่งวันนี้</div>
+          <div class="kpi-value">{{today_done}} <span class="kpi-sub">/ {{today_target}}</span></div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-3">
+        <div class="card kpi-card">
+          <div class="kpi-label">ตรงเวลา (On-time)</div>
+          <div class="kpi-value">{{on_time_rate}}%</div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-3">
+        <div class="card kpi-card">
+          <div class="kpi-label">คะแนนเฉลี่ย</div>
+          <div class="kpi-value">{{avg_rating}} <span class="star">★</span></div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-3">
+        <div class="card kpi-card">
+          <div class="kpi-label">สถานะงาน</div>
+          <div class="d-flex gap-2 flex-wrap mt-1">
+            <span class="pill pill-blue">กำลังส่ง {{in_transit}}</span>
+            <span class="pill pill-yellow">รอดำเนินการ {{pending}}</span>
+            <span class="pill pill-green">สำเร็จ {{completed}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main panels -->
+    <div class="row g-3 mt-1">
+      <!-- Left -->
+      <div class="col-12 col-lg-7">
+        <div class="card panel p-3">
+          <div class="panel-title">ตัวชี้วัดหลัก (Key Metrics)</div>
+
+          <div class="row g-3 mt-1">
+            <div class="col-6 col-md-3">
+              <div class="mini-metric ok">
+                <div class="mini-title">On-time</div>
+                <div class="mini-value">{{on_time_rate}}%</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="mini-metric info">
+                <div class="mini-title">เวลาเฉลี่ย</div>
+                <div class="mini-value">18 นาที</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="mini-metric bad">
+                <div class="mini-title">ส่งไม่สำเร็จ</div>
+                <div class="mini-value">5</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="mini-metric neutral">
+                <div class="mini-title">ระยะเฉลี่ย/ทริป</div>
+                <div class="mini-value">38.6 กม.</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-3">
+
+          <div class="panel-title">Top Couriers</div>
+          <div class="list-group list-group-flush mt-2">
+            {% for c in top_couriers %}
+            <div class="list-group-item d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center gap-2">
+                <div class="avatar-sm">👤</div>
+                <div>
+                  <div class="fw-semibold">{{c.name}}</div>
+                  <div class="text-muted small">{{c.deliveries}} Deliveries · {{c.rating}} ★</div>
+                </div>
+              </div>
+              <button class="btn btn-sm btn-outline-primary">ดูรายละเอียด</button>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Right -->
+      <div class="col-12 col-lg-5">
+        <div class="card panel p-3">
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="panel-title">ประสิทธิภาพการจัดส่ง</div>
+            <select class="form-select form-select-sm w-auto">
+              <option>7 วันล่าสุด</option>
+              <option>30 วันล่าสุด</option>
+            </select>
+          </div>
+
+          <div class="mt-2 chart-wrap">
+            <canvas id="perfChart"></canvas>
+          </div>
+
+          <hr class="my-3">
+
+          <div class="panel-title">จุดล่าช้า (Delay Hotspots)</div>
+          <div class="map-placeholder mt-2">
+            <div class="map-badge">แผนที่/Heatmap</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom actions -->
+    <div class="d-flex justify-content-end gap-2 mt-3">
+  <a class="btn btn-outline-primary" href="/form">บันทึกข้อมูล</a>
+  <a class="btn btn-primary" href="/docs">ดู API</a>
+  <a class="btn btn-warning" href="/export/pdf?month=2026-09">ดาวน์โหลดรายงาน PDF</a>
+</div>
+  </main>
+
+  <script src="/static/dashboard.js"></script>
+</body>
+</html>
